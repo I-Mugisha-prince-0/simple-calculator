@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Simple Calculator</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(135deg, #e0eafc, #cfdef3);
+    }
+
+    .calculator {
+      background: #1f2937;
+      padding: 20px;
+      border-radius: 16px;
+      box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+      width: 320px;
+    }
+
+    .display {
+      width: 100%;
+      height: 70px;
+      background: #111827;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      text-align: right;
+      font-size: 2rem;
+      padding: 10px 14px;
+      margin-bottom: 15px;
+      overflow: hidden;
+    }
+
+    .buttons {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+    }
+
+    button {
+      border: none;
+      border-radius: 10px;
+      height: 60px;
+      font-size: 1.2rem;
+      cursor: pointer;
+      transition: transform 0.12s ease, opacity 0.2s ease;
+      background: #374151;
+      color: white;
+    }
+
+    button:hover {
+      opacity: 0.95;
+    }
+
+    button:active {
+      transform: scale(0.98);
+    }
+
+    .operator {
+      background: #f59e0b;
+    }
+
+    .clear {
+      background: #ef4444;
+    }
+
+    .equal {
+      background: #10b981;
+      grid-column: span 2;
+    }
+
+    .zero {
+      grid-column: span 2;
+    }
+  </style>
+</head>
+<body>
+  <div class="calculator">
+    <input class="display" id="display" type="text" readonly value="0" />
+
+    <div class="buttons">
+      <button class="clear" onclick="clearDisplay()">C</button>
+      <button onclick="deleteLast()">DEL</button>
+      <button class="operator" onclick="appendValue('/')">/</button>
+      <button class="operator" onclick="appendValue('*')">×</button>
+
+      <button onclick="appendValue('7')">7</button>
+      <button onclick="appendValue('8')">8</button>
+      <button onclick="appendValue('9')">9</button>
+      <button class="operator" onclick="appendValue('-')">−</button>
+
+      <button onclick="appendValue('4')">4</button>
+      <button onclick="appendValue('5')">5</button>
+      <button onclick="appendValue('6')">6</button>
+      <button class="operator" onclick="appendValue('+')">+</button>
+
+      <button onclick="appendValue('1')">1</button>
+      <button onclick="appendValue('2')">2</button>
+      <button onclick="appendValue('3')">3</button>
+      <button class="equal" onclick="calculateResult()">=</button>
+
+      <button class="zero" onclick="appendValue('0')">0</button>
+      <button onclick="appendValue('.')">.</button>
+    </div>
+  </div>
+
+  <script>
+    const display = document.getElementById('display');
+    let expression = '';
+
+    function updateDisplay() {
+      display.value = expression || '0';
+    }
+
+    function appendValue(value) {
+      const lastChar = expression.slice(-1);
+
+      if (['+', '-', '*', '/'].includes(value)) {
+        if (!expression || ['+', '-', '*', '/'].includes(lastChar)) {
+          return;
+        }
+      }
+
+      if (value === '.' && lastChar === '.') {
+        return;
+      }
+
+      if (value === '.' && expression.includes('.')) {
+        const lastOperatorIndex = Math.max(
+          expression.lastIndexOf('+'),
+          expression.lastIndexOf('-'),
+          expression.lastIndexOf('*'),
+          expression.lastIndexOf('/')
+        );
+
+        const lastNumber = expression.slice(lastOperatorIndex + 1);
+        if (lastNumber.includes('.')) {
+          return;
+        }
+      }
+
+      expression += value;
+      updateDisplay();
+    }
+
+    function deleteLast() {
+      expression = expression.slice(0, -1);
+      updateDisplay();
+    }
+
+    function clearDisplay() {
+      expression = '';
+      updateDisplay();
+    }
+
+    function calculateResult() {
+      if (!expression) return;
+
+      try {
+        const sanitized = expression.replace(/×/g, '*').replace(/−/g, '-');
+        const result = Function(`"use strict"; return (${sanitized})`)();
+        expression = Number.isInteger(result) ? String(result) : String(parseFloat(result.toFixed(10)));
+        updateDisplay();
+      } catch {
+        expression = 'Error';
+        updateDisplay();
+        setTimeout(() => {
+          expression = '';
+          updateDisplay();
+        }, 700);
+      }
+    }
+
+    document.addEventListener('keydown', (event) => {
+      const key = event.key;
+
+      if (/^[0-9]$/.test(key)) appendValue(key);
+      else if (['+', '-', '*', '/'].includes(key)) appendValue(key);
+      else if (key === '.') appendValue('.');
+      else if (key === 'Enter') calculateResult();
+      else if (key === 'Backspace') deleteLast();
+      else if (key === 'Escape') clearDisplay();
+    });
+  </script>
+</body>
+</html>
